@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+      width: 100%;
+      max-width: 540px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 32px 32px 28px;
+      color: #fff;
+    }
+
+    .card-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .card-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .card-header p {
+      margin-top: 4px;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .header-date {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .header-date .date-day {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .header-date .date-monthyear {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .card-body { padding: 28px 32px 32px; }
+
+    /* Input row */
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .input-row input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      color: #111;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .input-row input:focus { border-color: #667eea; }
+
+    .input-row button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      line-height: 1;
+    }
+
+    .input-row button:hover { opacity: 0.88; }
+    .input-row button:active { transform: scale(0.96); }
+
+    /* Stats bar */
+    .stats {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .stats span {
+      background: #f3f4f6;
+      border-radius: 20px;
+      padding: 4px 12px;
+    }
+
+    .stats .done-count { background: #d1fae5; color: #065f46; }
+
+    /* Task list */
+    #task-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #f9fafb;
+      border: 2px solid transparent;
+      border-radius: 14px;
+      transition: border-color 0.2s, background 0.2s;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-item:hover { border-color: #e5e7eb; background: #fff; }
+
+    .task-item.done { background: #f0fdf4; }
+
+    /* Custom checkbox */
+    .task-check {
+      width: 22px; height: 22px;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .task-item.done .task-check {
+      background: #10b981;
+      border-color: #10b981;
+      color: #fff;
+    }
+
+    .task-check::after { content: ''; }
+    .task-item.done .task-check::after { content: '✓'; font-size: 0.75rem; font-weight: 700; }
+
+    .task-text {
+      flex: 1;
+      font-size: 0.95rem;
+      color: #1f2937;
+      word-break: break-word;
+      transition: color 0.2s;
+    }
+
+    .task-item.done .task-text {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    .task-delete {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #d1d5db;
+      padding: 4px;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .task-delete:hover { color: #ef4444; background: #fee2e2; }
+
+    .task-edit {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #d1d5db;
+      padding: 4px;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .task-edit:hover { color: #667eea; background: #ede9fe; }
+
+    .task-item.editing .task-text { display: none; }
+    .task-item.editing .task-check { pointer-events: none; opacity: 0.4; }
+
+    .edit-row {
+      display: none;
+      flex: 1;
+      gap: 6px;
+    }
+
+    .task-item.editing .edit-row { display: flex; }
+
+    .edit-row input {
+      flex: 1;
+      padding: 4px 10px;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #111;
+      outline: none;
+    }
+
+    .edit-row button {
+      padding: 4px 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .edit-save { background: #667eea; color: #fff; }
+    .edit-save:hover { background: #4f46e5; }
+    .edit-cancel { background: #f3f4f6; color: #6b7280; }
+    .edit-cancel:hover { background: #e5e7eb; }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 40px 0 20px;
+      color: #9ca3af;
+    }
+
+    .empty .icon { font-size: 3rem; display: block; margin-bottom: 12px; }
+    .empty p { font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div>
+        <h1>My To-Do List</h1>
+        <p>Stay organised, get things done.</p>
+      </div>
+      <div class="header-date">
+        <div class="date-day" id="date-day"></div>
+        <div class="date-monthyear" id="date-monthyear"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="input-row">
+      <input id="new-task" type="text" placeholder="Add a new task…" maxlength="200" />
+      <button id="add-btn" title="Add task">+</button>
+    </div>
+
+    <div class="stats">
+      <span id="total-count">0 tasks</span>
+      <span id="done-count" class="done-count" style="display:none"></span>
+    </div>
+
+    <ul id="task-list"></ul>
+  </div>
+</div>
+
+<script>
+  const now = new Date();
+  document.getElementById('date-day').textContent = now.getDate();
+  document.getElementById('date-monthyear').textContent =
+    now.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+
+  const list = document.getElementById('task-list');
+  const input = document.getElementById('new-task');
+  const addBtn = document.getElementById('add-btn');
+  const totalEl = document.getElementById('total-count');
+  const doneEl = document.getElementById('done-count');
+
+  async function fetchTasks() {
+    const res = await fetch('/api/tasks');
+    const tasks = await res.json();
+    renderAll(tasks);
+  }
+
+  function renderAll(tasks) {
+    list.innerHTML = '';
+    if (tasks.length === 0) {
+      list.innerHTML = `
+        <div class="empty">
+          <span class="icon">✅</span>
+          <p>No tasks yet — add one above!</p>
+        </div>`;
+    } else {
+      tasks.forEach(t => list.appendChild(makeItem(t)));
+    }
+    updateStats(tasks);
+  }
+
+  function makeItem(task) {
+    const li = document.createElement('li');
+    li.className = 'task-item' + (task.done ? ' done' : '');
+    li.dataset.id = task.id;
+
+    const check = document.createElement('div');
+    check.className = 'task-check';
+    check.title = task.done ? 'Mark incomplete' : 'Mark complete';
+    check.addEventListener('click', () => toggleTask(task.id, li));
+
+    const text = document.createElement('span');
+    text.className = 'task-text';
+    text.textContent = task.text;
+
+    const editRow = document.createElement('div');
+    editRow.className = 'edit-row';
+
+    const editInput = document.createElement('input');
+    editInput.type = 'text';
+    editInput.maxLength = 200;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'edit-save';
+    saveBtn.textContent = 'Save';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'edit-cancel';
+    cancelBtn.textContent = 'Cancel';
+
+    editRow.append(editInput, saveBtn, cancelBtn);
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'task-edit';
+    editBtn.title = 'Edit task';
+    editBtn.textContent = '✏️';
+    editBtn.addEventListener('click', () => {
+      li.classList.add('editing');
+      editInput.value = text.textContent;
+      editInput.focus();
+    });
+
+    cancelBtn.addEventListener('click', () => li.classList.remove('editing'));
+
+    editInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveBtn.click();
+      if (e.key === 'Escape') cancelBtn.click();
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const newText = editInput.value.trim();
+      if (!newText) return;
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newText })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        text.textContent = updated.text;
+        li.classList.remove('editing');
+      }
+    });
+
+    const del = document.createElement('button');
+    del.className = 'task-delete';
+    del.title = 'Delete task';
+    del.textContent = '🗑';
+    del.addEventListener('click', () => deleteTask(task.id, li));
+
+    li.append(check, text, editRow, editBtn, del);
+    return li;
+  }
+
+  function updateStats(tasks) {
+    const done = tasks.filter(t => t.done).length;
+    totalEl.textContent = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
+    if (done > 0) {
+      doneEl.textContent = `${done} done`;
+      doneEl.style.display = '';
+    } else {
+      doneEl.style.display = 'none';
+    }
+  }
+
+  async function addTask() {
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    addBtn.disabled = true;
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (res.ok) {
+        input.value = '';
+        await fetchTasks();
+      }
+    } catch (err) {
+      console.error('Error adding task:', err);
+    } finally {
+      addBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  async function toggleTask(id, li) {
+    const res = await fetch(`/api/tasks/${id}`, { method: 'PATCH' });
+    if (res.ok) {
+      const task = await res.json();
+      li.className = 'task-item' + (task.done ? ' done' : '');
+      li.querySelector('.task-check').title = task.done ? 'Mark incomplete' : 'Mark complete';
+      // refresh stats
+      fetchTasks();
+    }
+  }
+
+  async function deleteTask(id, li) {
+    li.style.opacity = '0.4';
+    const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+    if (res.ok) fetchTasks();
+    else li.style.opacity = '1';
+  }
+
+  addBtn.addEventListener('click', addTask);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+  fetchTasks();
+</script>
+</body>
+</html>
